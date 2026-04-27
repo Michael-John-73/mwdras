@@ -6,6 +6,16 @@
 > *"Meta-Watermarking for Detection Recovery under Attack Shift: Empirical Analysis of FOMAML-Based Fast Adaptation"*  
 > IEEE Access, 2026.
 
+[![GitHub Pages](https://img.shields.io/badge/Project%20Page-GitHub%20Pages-blue?logo=github)](https://Michael-John-73.github.io/mwdras/)
+[![IEEE Access](https://img.shields.io/badge/Paper-IEEE%20Access-orange)](https://ieeexplore.ieee.org)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-green?logo=python)](requirements.txt)
+
+---
+
+## Pipeline
+
+![Pipeline Overview](docs/assets/fig1_pipeline_flow.png)
+
 ---
 
 ## Overview
@@ -111,12 +121,35 @@ ROBIN score dump  ──►  Task split (train/val/test)
 
 ### Key Results (scale = 64 images)
 
-| Method | k* (mean) | TPR@k* | FPR@k* |
-|--------|-----------|--------|--------|
-| Meta (FOMAML) | **1** | **≥0.90** | **≤0.05** |
-| B1 Full Retrain | 4 | 0.90 | 0.05 |
-| B2 Generic FT | 2 | 0.88 | 0.06 |
-| B3 Threshold | — | 0.72 | 0.05 |
+| Method | k* (mean) | TPR@k* | FPR@k* | Recovery Rate | Rel. Compute |
+|--------|-----------|--------|--------|---------------|--------------|
+| **Meta (FOMAML)** | **1** | **0.91** | 0.04 | **100%** | **1×** |
+| B1 Full Retrain | 4 | 0.90 | 0.05 | 100% | 43,000× |
+| B2 Generic FT | 2 | 0.88 | 0.06 | 86% | 2× |
+| B3 Threshold | — | 0.72 | 0.05 | 0% | <1× |
+
+<p align="center">
+  <img src="docs/assets/fig2_recovery_kstar.png" width="48%" alt="Fig 2: k* by attack"/>
+  <img src="docs/assets/fig3_tpr_vs_scale.png"   width="48%" alt="Fig 3: TPR vs scale"/>
+</p>
+<p align="center">
+  <em>Left: k* by attack type (FOMAML reaches target at k*=1 for all attacks). &nbsp; Right: TPR across scales 32–256.</em>
+</p>
+
+<p align="center">
+  <img src="docs/assets/fig5_cost_benefit.png"          width="48%" alt="Fig 5: Cost-Benefit"/>
+  <img src="docs/assets/fig4_adaptation_trajectory.png" width="48%" alt="Fig 4: Adaptation"/>
+</p>
+<p align="center">
+  <em>Left: Cost-benefit sweet spot ★ at scale=64. &nbsp; Right: TPR adaptation trajectory (converges within 1–2 steps).</em>
+</p>
+
+<p align="center">
+  <img src="docs/assets/fig6_spearman_scatter.png" width="55%" alt="Fig 6: Spearman"/>
+</p>
+<p align="center">
+  <em>Spearman ρ=0.87 (p&lt;0.01) — k* increases monotonically with attack severity (MCS=1.0).</em>
+</p>
 
 ---
 
