@@ -145,7 +145,7 @@ ROBIN score dump  ──►  Task split (train/val/test)
 </p>
 
 <p align="center">
-  <img src="docs/assets/fig6_spearman_scatter.png" width="83%" alt="Fig 6: Spearman"/>
+  <img src="docs/assets/fig6_spearman_scatter.png" width="100%" alt="Fig 6: Spearman"/>
 </p>
 <p align="center">
   <em>Spearman ρ=0.87 (p&lt;0.01) — k* increases monotonically with attack severity (MCS=1.0).</em>
