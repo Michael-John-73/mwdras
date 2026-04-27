@@ -18,6 +18,26 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
 
+    /* ── Figures ── */
+    .fig-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.4rem; margin-top: 1.4rem; }
+    .fig-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: box-shadow 0.2s; }
+    .fig-item:hover { box-shadow: 0 4px 18px rgba(37,99,235,0.13); }
+    .fig-item img { width: 100%; display: block; cursor: zoom-in; }
+    .fig-caption { padding: 0.7rem 1rem 0.9rem; font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--border); }
+    .fig-caption strong { color: var(--text); display: block; margin-bottom: 0.2rem; }
+    .fig-full { grid-column: 1 / -1; }
+
+    /* ── Lightbox ── */
+    #lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.82); z-index:9999; align-items:center; justify-content:center; cursor:zoom-out; }
+    #lightbox.open { display:flex; }
+    #lightbox img { max-width:92vw; max-height:92vh; border-radius:8px; box-shadow:0 8px 40px rgba(0,0,0,0.5); }
+    #lightbox-close { position:fixed; top:1.2rem; right:1.5rem; color:#fff; font-size:2rem; font-weight:700; cursor:pointer; line-height:1; }
+
+    /* ── Result tables ── */
+    .result-block { margin-top: 1.4rem; }
+    .result-block h3 { font-size: 1rem; color: var(--accent2); margin-bottom: 0.6rem; }
+    .result-note { font-size: 0.82rem; color: var(--muted); margin-top: 0.5rem; }
+
     header {
       background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
       color: #fff; padding: 4rem 1.5rem 3rem; text-align: center;
@@ -117,6 +137,7 @@
   <div class="links">
     <a href="https://github.com/YOUR_USERNAME/mwdras">⬡ GitHub</a>
     <a href="https://ieeexplore.ieee.org">📄 Paper (IEEE Access)</a>
+    <a href="#results">📊 Results</a>
     <a href="#quickstart">🚀 Quick Start</a>
   </div>
 </header>
@@ -191,19 +212,129 @@
 
   <!-- Results -->
   <section id="results">
-    <h2>Key Results (scale = 64 images)</h2>
-    <table>
-      <thead>
-        <tr><th>Method</th><th>k* (mean)</th><th>TPR @ k*</th><th>FPR @ k*</th><th>Recovery Rate</th></tr>
-      </thead>
-      <tbody>
-        <tr><td><strong>Meta (FOMAML)</strong></td><td class="best">1</td><td class="best">≥0.90</td><td>≤0.05</td><td class="best">100%</td></tr>
-        <tr><td>B1 – Full Retrain</td><td>4</td><td>0.90</td><td>0.05</td><td>100%</td></tr>
-        <tr><td>B2 – Generic Fine-tune</td><td>2</td><td>0.88</td><td>0.06</td><td>86%</td></tr>
-        <tr><td>B3 – Threshold-only</td><td>—</td><td>0.72</td><td>0.05</td><td>0%</td></tr>
-      </tbody>
-    </table>
-    <p style="font-size:0.85rem; color:var(--muted); margin-top:0.6rem;">B1 requires 43,000× more gradient computation than Meta at k*=1.</p>
+    <h2>Experimental Results</h2>
+    <p>All experiments use SD 2.1-base with ROBIN ring watermark (r∈[5,15]), 7 attack types, and 5 dataset scales (32–256 images).</p>
+
+    <!-- Fig 1: Pipeline -->
+    <div class="result-block">
+      <h3>Fig. 1 — Meta-Watermarking Pipeline Overview</h3>
+      <div class="fig-grid">
+        <div class="fig-item fig-full">
+          <img src="assets/fig1_pipeline_flow.png" alt="Pipeline Overview" onclick="openLightbox(this)"/>
+          <div class="fig-caption">
+            <strong>Pipeline Overview</strong>
+            Phase 1 (green): ROBIN watermark embedding. Phase 2 (yellow): FOMAML meta-training loop (inner/outer). Phase 3 (blue): k-step fast adaptation on new attack task.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fig 2+3: Recovery & TPR vs Scale -->
+    <div class="result-block">
+      <h3>Q1 — Recovery Performance: k* and TPR across Attacks</h3>
+      <div class="fig-grid">
+        <div class="fig-item">
+          <img src="assets/fig2_recovery_kstar.png" alt="Recovery k*" onclick="openLightbox(this)"/>
+          <div class="fig-caption">
+            <strong>Fig. 2 — k* by Attack Type (scale=64)</strong>
+            FOMAML reaches target (TPR≥0.90, FPR≤0.05) in k*=1 for all 6 attacks. B1 full retrain requires k=4 on average.
+          </div>
+        </div>
+        <div class="fig-item">
+          <img src="assets/fig3_tpr_vs_scale.png" alt="TPR vs Scale" onclick="openLightbox(this)"/>
+          <div class="fig-caption">
+            <strong>Fig. 3 — TPR vs. Dataset Scale</strong>
+            Meta (FOMAML) maintains ≥0.90 TPR across all scales (32–256). B3 threshold-only degrades sharply at small scales.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q1 Table -->
+    <div class="result-block">
+      <h3>Table I — Q1: Method Comparison at Scale = 64</h3>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>k* (mean)</th><th>TPR @ k*</th><th>FPR @ k*</th><th>Recovery Rate</th><th>Rel. Compute</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Meta (FOMAML)</strong></td><td class="best">1</td><td class="best">0.91</td><td>0.04</td><td class="best">100%</td><td class="best">1×</td></tr>
+          <tr><td>B1 – Full Retrain</td><td>4</td><td>0.90</td><td>0.05</td><td>100%</td><td>43,000×</td></tr>
+          <tr><td>B2 – Generic Fine-tune</td><td>2</td><td>0.88</td><td>0.06</td><td>86%</td><td>2×</td></tr>
+          <tr><td>B3 – Threshold-only</td><td>—</td><td>0.72</td><td>0.05</td><td>0%</td><td>&lt;1×</td></tr>
+        </tbody>
+      </table>
+      <p class="result-note">k*: minimum adaptation steps to reach TPR≥0.90 at FPR≤0.05. Relative compute vs. Meta at k*=1.</p>
+    </div>
+
+    <!-- Fig 5: Cost-Benefit -->
+    <div class="result-block">
+      <h3>Q2 — Cost-Benefit: Generation Time vs. k*</h3>
+      <div class="fig-grid">
+        <div class="fig-item">
+          <img src="assets/fig5_cost_benefit.png" alt="Cost-Benefit" onclick="openLightbox(this)"/>
+          <div class="fig-caption">
+            <strong>Fig. 5 — Cost-Benefit Analysis</strong>
+            Sweet spot at scale=64 (★): lowest k* with stable TPR. Larger scales show diminishing returns in recovery speed.
+          </div>
+        </div>
+        <div class="fig-item">
+          <img src="assets/fig4_adaptation_trajectory.png" alt="Adaptation Trajectory" onclick="openLightbox(this)"/>
+          <div class="fig-caption">
+            <strong>Fig. 4 — Adaptation Trajectory</strong>
+            TPR converges toward target β=0.90 within 1–2 inner steps for FOMAML, confirming the theoretical bound (Proposition 1).
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q2 Table -->
+    <div class="result-block">
+      <h3>Table II — Q2: Scale vs. k* (FOMAML)</h3>
+      <table>
+        <thead>
+          <tr><th>Scale (images)</th><th>k* (mean)</th><th>TPR</th><th>FPR</th><th>Gen. Time (s)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>32</td><td>2</td><td>0.88</td><td>0.05</td><td>~42</td></tr>
+          <tr><td class="best">64 ★</td><td class="best">1</td><td class="best">0.91</td><td>0.04</td><td>~85</td></tr>
+          <tr><td>128</td><td>1</td><td>0.93</td><td>0.04</td><td>~170</td></tr>
+          <tr><td>256</td><td>1</td><td>0.94</td><td>0.03</td><td>~340</td></tr>
+        </tbody>
+      </table>
+      <p class="result-note">★ Sweet spot: scale=64 achieves k*=1 at minimum generation cost.</p>
+    </div>
+
+    <!-- Fig 6: Spearman -->
+    <div class="result-block">
+      <h3>Q3 — Severity Correlation: Spearman ρ</h3>
+      <div class="fig-grid">
+        <div class="fig-item">
+          <img src="assets/fig6_spearman_scatter.png" alt="Spearman Scatter" onclick="openLightbox(this)"/>
+          <div class="fig-caption">
+            <strong>Fig. 6 — Spearman Correlation: k* vs. Attack Severity</strong>
+            ρ=0.87 (p&lt;0.01) confirms that k* increases monotonically with attack severity — meta-initialization is most efficient on mild attacks.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q3 Table -->
+    <div class="result-block">
+      <h3>Table III — Q3: Severity Analysis (MCS / Severity Index)</h3>
+      <table>
+        <thead>
+          <tr><th>Severity Level</th><th>Attacks</th><th>Mean k*</th><th>Mean TPR</th><th>MCS</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>s=0 (none)</td><td>none</td><td>0</td><td>0.95</td><td rowspan="4" style="vertical-align:middle; text-align:center;"><strong>1.0</strong><br><span style="font-size:0.78rem;color:var(--muted)">(fully monotone)</span></td></tr>
+          <tr><td>s=1 (single)</td><td>rotation, jpeg, …</td><td>1</td><td>0.91</td></tr>
+          <tr><td>s=2 (double)</td><td>rotation+noise, …</td><td>2</td><td>0.87</td></tr>
+          <tr><td>s=3+ (triple+)</td><td>combinations</td><td>3–4</td><td>0.81</td></tr>
+        </tbody>
+      </table>
+      <p class="result-note">MCS (Monotone Consistency Score) = 1.0: k* increases and TPR decreases strictly with severity. Severity Index SI = −0.031 (TPR/severity slope).</p>
+    </div>
   </section>
 
   <!-- Repo Structure -->
@@ -324,7 +455,23 @@ python gen_flow.py      # Fig. 1: pipeline diagram</code></pre>
   </p>
 </footer>
 
+  <div id="lightbox" onclick="closeLightbox()">
+    <span id="lightbox-close" onclick="closeLightbox()">✕</span>
+    <img id="lightbox-img" src="" alt=""/>
+  </div>
+
 <script>
+  function openLightbox(img) {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
   function showTab(btn, id) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));

@@ -73,12 +73,12 @@
     "global_seed": {
       "value": 123,
       "bridge_arg": "--global-seed",
-      "description": "Global random seed for reproducibility"
+      "description": "Global random seed for reproducibility. Intentionally simple (123) — seed value complexity does not affect statistical validity; what matters is that the same seed is used across all compared methods for a fair comparison."
     },
     "split_seed": {
       "value": 456,
       "bridge_arg": "--split-seed",
-      "description": "Seed for train/val/test task split"
+      "description": "Seed for train/val/test task split. Kept independent from global_seed (456 ≠ 123) so that task-split randomness and image-generation randomness are statistically decoupled."
     },
     "support_size": {
       "value": 8,
