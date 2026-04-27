@@ -1,0 +1,140 @@
+{
+  "_description": "Parameter file connecting ROBIN's original source variables to mwdras_bridge.py. Edit the values below to match your local setup before running mwdras_bridge.py.",
+
+  "robin_source_mapping": {
+    "_note": "These keys map 1-to-1 to ROBIN's inject_wm_inner_latent_robin.py argparse arguments and optim_utils.py globals.",
+
+    "robin_root": {
+      "value": "/path/to/robin_official",
+      "robin_variable": "args.robin_root (CLI: --robin-root)",
+      "description": "Absolute path to the unmodified robin_official/ directory"
+    },
+    "model_id": {
+      "value": "stabilityai/stable-diffusion-2-1-base",
+      "robin_variable": "args.model_id (CLI: --model-id)",
+      "description": "HuggingFace model ID for the SD pipeline"
+    },
+    "wm_path": {
+      "value": "/path/to/robin_official/ckpts/no_training_r5_15.pt",
+      "robin_variable": "args.wm_path (CLI: --wm-path)",
+      "description": "Path to the ROBIN watermark checkpoint (.pt). Contains keys: opt_wm, opt_acond"
+    },
+    "num_inference_steps": {
+      "value": 50,
+      "robin_variable": "args.num_inference_steps (CLI: --num-inference-steps)",
+      "description": "DDIM steps for watermark injection (generation)"
+    },
+    "test_num_inference_steps": {
+      "value": 50,
+      "robin_variable": "args.test_num_inference_steps (CLI: --test-num-inference-steps)",
+      "description": "DDIM steps for DDIM inversion (detection)"
+    },
+    "guidance_scale": {
+      "value": 7.5,
+      "robin_variable": "args.guidance_scale (CLI: --guidance-scale)",
+      "description": "Classifier-free guidance scale"
+    },
+    "w_channel": {
+      "value": 3,
+      "robin_variable": "args.w_channel → optim_utils.to_ring(), get_watermarking_mask()",
+      "description": "Latent channel index where the ring watermark is embedded"
+    },
+    "w_pattern": {
+      "value": "ring",
+      "robin_variable": "args.w_pattern → optim_utils.get_watermarking_pattern()",
+      "description": "Watermark pattern type. Use 'ring' for ROBIN ring-pattern"
+    },
+    "w_mask_shape": {
+      "value": "circle",
+      "robin_variable": "args.w_mask_shape → optim_utils.get_watermarking_mask()",
+      "description": "Shape of the frequency-domain watermark mask"
+    },
+    "w_up_radius": {
+      "value": 15,
+      "robin_variable": "args.w_up_radius → optim_utils.to_ring(), circle_mask()",
+      "description": "Outer radius of the ring watermark in Fourier space (pixels)"
+    },
+    "w_low_radius": {
+      "value": 5,
+      "robin_variable": "args.w_low_radius → optim_utils.to_ring(), circle_mask()",
+      "description": "Inner radius of the ring watermark in Fourier space (pixels)"
+    }
+  },
+
+  "meta_learning_config": {
+    "_note": "MWDRAS meta-learner settings. These are passed through mwdras_bridge.py to mwdras_meta_runner.py.",
+
+    "algorithm": {
+      "value": "fomaml",
+      "choices": ["fomaml", "reptile"],
+      "bridge_arg": "--algorithm",
+      "description": "Meta-learning algorithm. 'fomaml' is the primary method in the paper"
+    },
+    "global_seed": {
+      "value": 123,
+      "bridge_arg": "--global-seed",
+      "description": "Global random seed for reproducibility"
+    },
+    "split_seed": {
+      "value": 456,
+      "bridge_arg": "--split-seed",
+      "description": "Seed for train/val/test task split"
+    },
+    "support_size": {
+      "value": 8,
+      "bridge_arg": "--support-size",
+      "description": "Number of support samples per class per task"
+    },
+    "query_size": {
+      "value": 8,
+      "bridge_arg": "--query-size",
+      "description": "Number of query samples per class per task"
+    },
+    "alpha_fpr": {
+      "value": 0.05,
+      "bridge_arg": "--alpha-fpr",
+      "description": "Target FPR constraint α (5%)"
+    },
+    "tpr_target_beta": {
+      "value": 0.9,
+      "bridge_arg": "--tpr-target-beta",
+      "description": "Recovery target TPR β (90%)"
+    },
+    "k_grid": {
+      "value": "0,1,2,4,8",
+      "bridge_arg": "--k-grid",
+      "description": "Adaptation step counts to sweep when finding k*"
+    },
+    "inner_steps": {
+      "value": 2,
+      "bridge_arg": "--inner-steps",
+      "description": "FOMAML inner-loop gradient steps during meta-training"
+    },
+    "inner_lr": {
+      "value": 0.3,
+      "bridge_arg": "--inner-lr",
+      "description": "Inner-loop learning rate α_in"
+    },
+    "meta_lr": {
+      "value": 0.1,
+      "bridge_arg": "--meta-lr",
+      "description": "Outer-loop (meta) learning rate α_out"
+    },
+    "outer_iterations": {
+      "value": 20,
+      "bridge_arg": "--outer-iterations",
+      "description": "Number of meta-training outer iterations"
+    },
+    "meta_batch_size_tasks": {
+      "value": 2,
+      "bridge_arg": "--meta-batch-size-tasks",
+      "description": "Number of tasks sampled per outer iteration"
+    }
+  },
+
+  "usage_example": {
+    "basic": "python mwdras_bridge.py --robin-root /path/to/robin_official --model-id stabilityai/stable-diffusion-2-1-base --wm-path /path/to/ckpts/no_training_r5_15.pt --end 64 --bridge-output-root ./outputs",
+    "skip_robin_run": "python mwdras_bridge.py --skip-robin-run --existing-score-dump ./outputs/robin_runtime_score_dump.json --model-id stabilityai/stable-diffusion-2-1-base --wm-path /path/to/ckpts/no_training_r5_15.pt --bridge-output-root ./outputs",
+    "combo_mode": "python mwdras_bridge.py --robin-root /path/to/robin_official --model-id stabilityai/stable-diffusion-2-1-base --wm-path /path/to/ckpts/no_training_r5_15.pt --end 64 --combo-mode --max-severity 3 --bridge-output-root ./outputs"
+  }
+}

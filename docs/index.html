@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MWDRAS – Meta-Watermarking Detection Recovery Attack Shift</title>
+  <style>
+    :root {
+      --accent: #2563eb;
+      --accent2: #7c3aed;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #f1f5f9;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+    header {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      color: #fff; padding: 4rem 1.5rem 3rem; text-align: center;
+    }
+    header .badge {
+      display: inline-block; background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4); border-radius: 999px;
+      font-size: 0.78rem; padding: 0.25rem 0.9rem; margin-bottom: 1rem; letter-spacing: 0.05em;
+    }
+    header h1 { font-size: 2.8rem; font-weight: 800; letter-spacing: -0.02em; }
+    header .subtitle { font-size: 1.05rem; opacity: 0.88; margin-top: 0.6rem; max-width: 640px; margin-inline: auto; }
+    header .paper-title {
+      margin-top: 1.2rem; font-style: italic; opacity: 0.82;
+      font-size: 0.95rem; max-width: 700px; margin-inline: auto;
+    }
+    header .links { margin-top: 1.8rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+    header .links a {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.35);
+      color: #fff; text-decoration: none; padding: 0.5rem 1.2rem;
+      border-radius: 8px; font-weight: 600; font-size: 0.9rem; transition: background 0.2s;
+    }
+    header .links a:hover { background: rgba(255,255,255,0.28); }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; }
+    section { padding: 3rem 0 1.5rem; }
+    h2 { font-size: 1.55rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent); border-bottom: 2px solid var(--border); padding-bottom: 0.4rem; }
+    h3 { font-size: 1.1rem; font-weight: 600; margin: 1.4rem 0 0.5rem; }
+    p { margin-bottom: 0.9rem; color: var(--text); }
+
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1.2rem; margin-top: 1.2rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.4rem 1.2rem; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+    .card .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .card h3 { margin-top: 0; font-size: 1rem; }
+    .card p { font-size: 0.88rem; color: var(--muted); margin-bottom: 0; }
+
+    .pipeline {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 2rem 1.5rem; margin-top: 1.2rem; overflow-x: auto;
+    }
+    .pipe-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
+    .pipe-box {
+      background: var(--code-bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.45rem 0.9rem;
+      font-size: 0.88rem; font-family: monospace; white-space: nowrap;
+    }
+    .pipe-arrow { font-size: 1.1rem; color: var(--accent); font-weight: bold; }
+    .pipe-box.highlight { background: #dbeafe; border-color: var(--accent); color: var(--accent); font-weight: 600; }
+    .pipe-box.dim { background: #f8fafc; color: var(--muted); }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.92rem; }
+    th { background: var(--code-bg); font-weight: 600; padding: 0.6rem 0.8rem; text-align: left; border: 1px solid var(--border); }
+    td { padding: 0.55rem 0.8rem; border: 1px solid var(--border); }
+    tr:nth-child(even) td { background: #f8fafc; }
+    td.best { font-weight: 700; color: var(--accent); }
+
+    pre {
+      background: #1e293b; color: #e2e8f0; border-radius: 10px;
+      padding: 1.2rem 1.4rem; overflow-x: auto; font-size: 0.84rem;
+      margin: 1rem 0; line-height: 1.6;
+    }
+    code { font-family: 'Cascadia Code', 'Fira Code', monospace; }
+    pre code { color: inherit; }
+    .tab { display: flex; gap: 0.5rem; margin-bottom: -1px; }
+    .tab-btn {
+      padding: 0.4rem 1rem; border: 1px solid var(--border); border-bottom: none;
+      border-radius: 8px 8px 0 0; font-size: 0.85rem; cursor: pointer;
+      background: var(--code-bg); color: var(--muted);
+    }
+    .tab-btn.active { background: #1e293b; color: #e2e8f0; border-color: #1e293b; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .file-tree { font-family: monospace; font-size: 0.88rem; line-height: 2; background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.5rem; margin-top: 1rem; }
+    .file-tree .dir { color: var(--accent); font-weight: 600; }
+    .file-tree .comment { color: var(--muted); font-size: 0.8rem; }
+    .file-tree .highlight { color: var(--accent2); font-weight: 600; }
+
+    .robin-note {
+      background: #fef3c7; border: 1px solid #fcd34d; border-radius: 10px;
+      padding: 1rem 1.2rem; margin-top: 1rem; font-size: 0.9rem;
+    }
+    .robin-note strong { color: #92400e; }
+
+    footer { background: #1e293b; color: #94a3b8; text-align: center; padding: 2.5rem 1rem; font-size: 0.85rem; margin-top: 4rem; }
+    footer a { color: #60a5fa; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">IEEE Access 2026</div>
+  <h1>MWDRAS</h1>
+  <p class="subtitle">Meta-Watermarking for Detection Recovery under Attack Shift</p>
+  <p class="paper-title">"Meta-Watermarking for Detection Recovery under Attack Shift:<br>Empirical Analysis of FOMAML-Based Fast Adaptation"</p>
+  <div class="links">
+    <a href="https://github.com/YOUR_USERNAME/mwdras">⬡ GitHub</a>
+    <a href="https://ieeexplore.ieee.org">📄 Paper (IEEE Access)</a>
+    <a href="#quickstart">🚀 Quick Start</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Overview -->
+  <section id="overview">
+    <h2>Overview</h2>
+    <p>
+      Ring-pattern watermarks embedded in diffusion model latents (e.g., ROBIN) suffer a critical vulnerability:
+      detection accuracy drops sharply when images undergo an <em>unseen</em> attack type at inference time.
+      MWDRAS solves this without retraining from scratch.
+    </p>
+    <p>
+      Using <strong>FOMAML</strong> (First-Order MAML), we meta-train a lightweight logistic detection head
+      so it can recover to <strong>≥90% TPR at ≤5% FPR</strong> within just <strong>1–4 gradient steps</strong>
+      on a small per-task support set — orders of magnitude faster than full retraining.
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <div class="icon">⚡</div>
+        <h3>Fast Recovery</h3>
+        <p>k* = 1 adaptation step to reach 90% TPR on unseen attacks</p>
+      </div>
+      <div class="card">
+        <div class="icon">🛡️</div>
+        <h3>Non-intrusive</h3>
+        <p>ROBIN substrate is used as-is. No watermark retraining needed</p>
+      </div>
+      <div class="card">
+        <div class="icon">🔬</div>
+        <h3>Empirical Analysis</h3>
+        <p>Full evaluation across 7 attacks + 63 attack combinations at 5 dataset scales</p>
+      </div>
+      <div class="card">
+        <div class="icon">📐</div>
+        <h3>Theoretical Bound</h3>
+        <p>Proposition 1: asymptotic convergence guarantee for FOMAML head recovery</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pipeline -->
+  <section id="pipeline">
+    <h2>Pipeline</h2>
+    <div class="pipeline">
+      <div class="pipe-row">
+        <div class="pipe-box dim">SD 2.1 + ROBIN</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-box">Score Dump (7 attacks)</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-box">Task Manifest</div>
+      </div>
+      <div class="pipe-row">
+        <div class="pipe-box">Task Split (train/val/test)</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-box highlight">FOMAML Meta-Training</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-box">θ₀ (meta-init)</div>
+      </div>
+      <div class="pipe-row">
+        <div class="pipe-box">New Attack Task</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-box highlight">k* Inner Steps</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-box">θ_adapted → TPR ≥ β, FPR ≤ α</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section id="results">
+    <h2>Key Results (scale = 64 images)</h2>
+    <table>
+      <thead>
+        <tr><th>Method</th><th>k* (mean)</th><th>TPR @ k*</th><th>FPR @ k*</th><th>Recovery Rate</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Meta (FOMAML)</strong></td><td class="best">1</td><td class="best">≥0.90</td><td>≤0.05</td><td class="best">100%</td></tr>
+        <tr><td>B1 – Full Retrain</td><td>4</td><td>0.90</td><td>0.05</td><td>100%</td></tr>
+        <tr><td>B2 – Generic Fine-tune</td><td>2</td><td>0.88</td><td>0.06</td><td>86%</td></tr>
+        <tr><td>B3 – Threshold-only</td><td>—</td><td>0.72</td><td>0.05</td><td>0%</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:0.85rem; color:var(--muted); margin-top:0.6rem;">B1 requires 43,000× more gradient computation than Meta at k*=1.</p>
+  </section>
+
+  <!-- Repo Structure -->
+  <section id="structure">
+    <h2>Repository Structure</h2>
+    <div class="file-tree">
+      <span class="dir">MWDRAS/</span><br>
+      ├── <span class="highlight">mwdras_bridge.py</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Entry point — orchestrates ROBIN → meta-learner</span><br>
+      ├── <span class="highlight">mwdras_meta_learners.py</span> &nbsp;<span class="comment"># FOMAMLLearner, ReptileLearner, evaluate_recovery_kstar</span><br>
+      ├── mwdras_meta_runner.py &nbsp;&nbsp;<span class="comment"># Meta-train loop, baselines B1–B3, all Q1/Q2/Q3 analyses</span><br>
+      ├── mwdras_result_metrics.py <span class="comment"># MCS, Severity Index, bootstrap CI</span><br>
+      ├── gen_figures.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Reproduces Fig. 2–6</span><br>
+      ├── gen_flow.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Reproduces Fig. 1 pipeline diagram</span><br>
+      ├── <span class="highlight">robin_config.json</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># ROBIN parameter mapping (edit paths before use)</span><br>
+      ├── requirements.txt<br>
+      ├── README.md<br>
+      └── <span class="dir">docs/</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># This GitHub Pages site</span>
+    </div>
+
+    <div class="robin-note">
+      <strong>⚠ ROBIN Not Included.</strong>
+      The ROBIN watermarking source (<code>inject_wm_inner_latent_robin.py</code>, etc.) is not distributed here.
+      Clone <a href="https://github.com/XuandongZhao/ROBIN" target="_blank">robin_official</a> separately
+      and set <code>--robin-root</code> to that path.
+    </div>
+  </section>
+
+  <!-- Quick Start -->
+  <section id="quickstart">
+    <h2>Quick Start</h2>
+
+    <div class="tab">
+      <button class="tab-btn active" onclick="showTab(this,'t1')">Full Pipeline</button>
+      <button class="tab-btn" onclick="showTab(this,'t2')">Skip ROBIN</button>
+      <button class="tab-btn" onclick="showTab(this,'t3')">Figures</button>
+    </div>
+
+    <div id="t1" class="tab-panel active">
+      <pre><code># 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Run full pipeline (calls ROBIN, then meta-training)
+python mwdras_bridge.py \
+  --robin-root  /path/to/robin_official \
+  --model-id    stabilityai/stable-diffusion-2-1-base \
+  --wm-path     /path/to/ckpts/no_training_r5_15.pt \
+  --end 64 \
+  --bridge-output-root ./outputs</code></pre>
+    </div>
+
+    <div id="t2" class="tab-panel">
+      <pre><code># Use an existing ROBIN score dump (no GPU needed for meta-learning)
+python mwdras_bridge.py \
+  --skip-robin-run \
+  --existing-score-dump ./outputs/robin_runtime_score_dump.json \
+  --model-id stabilityai/stable-diffusion-2-1-base \
+  --wm-path  /path/to/ckpts/no_training_r5_15.pt \
+  --bridge-output-root ./outputs</code></pre>
+    </div>
+
+    <div id="t3" class="tab-panel">
+      <pre><code># Reproduce paper figures
+python gen_figures.py   # Fig. 2: recovery k*, Fig. 3–6
+python gen_flow.py      # Fig. 1: pipeline diagram</code></pre>
+    </div>
+
+    <h3>Output Files</h3>
+    <table>
+      <thead><tr><th>File</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>robin_runtime_score_dump.json</code></td><td>ROBIN raw scores per attack</td></tr>
+        <tr><td><code>task_manifest.json</code></td><td>Task split definition</td></tr>
+        <tr><td><code>meta_config_fomaml.json</code></td><td>Meta-learning configuration snapshot</td></tr>
+        <tr><td><code>meta_out/meta_fomaml_results.json</code></td><td>Full evaluation results (Q1/Q2/Q3)</td></tr>
+        <tr><td><code>meta_out/meta_fomaml_best.pt</code></td><td>Best meta-initialization checkpoint</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ROBIN Integration -->
+  <section id="robin">
+    <h2>ROBIN Integration Details</h2>
+    <p>
+      MWDRAS interfaces with ROBIN exclusively through <code>mwdras_bridge.py</code> as a subprocess call.
+      The only variables shared between ROBIN and MWDRAS are declared in <code>robin_config.json</code>:
+    </p>
+    <table>
+      <thead><tr><th>Parameter</th><th>ROBIN Variable</th><th>Default</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><code>w_channel</code></td><td><code>args.w_channel</code></td><td>3</td><td>Latent channel for ring embedding</td></tr>
+        <tr><td><code>w_pattern</code></td><td><code>args.w_pattern</code></td><td>ring</td><td>Watermark pattern type</td></tr>
+        <tr><td><code>w_mask_shape</code></td><td><code>args.w_mask_shape</code></td><td>circle</td><td>Frequency-domain mask shape</td></tr>
+        <tr><td><code>w_up_radius</code></td><td><code>args.w_up_radius → optim_utils.to_ring()</code></td><td>15</td><td>Outer ring radius (Fourier pixels)</td></tr>
+        <tr><td><code>w_low_radius</code></td><td><code>args.w_low_radius → optim_utils.to_ring()</code></td><td>5</td><td>Inner ring radius (Fourier pixels)</td></tr>
+        <tr><td><code>wm_path</code></td><td><code>args.wm_path</code></td><td>—</td><td>Pre-optimized watermark checkpoint</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Citation -->
+  <section id="citation">
+    <h2>Citation</h2>
+    <pre><code>@article{yun2026mwdras,
+  title   = {Meta-Watermarking for Detection Recovery under Attack Shift:
+             Empirical Analysis of FOMAML-Based Fast Adaptation},
+  author  = {Yun, Hyun-Gyo and Kim, Jae-Young and Lee, Hye-Jin},
+  journal = {IEEE Access},
+  year    = {2026}
+}</code></pre>
+  </section>
+
+</div>
+
+<footer>
+  <p>MWDRAS &nbsp;|&nbsp; IEEE Access 2026 &nbsp;|&nbsp;
+     <a href="https://github.com/YOUR_USERNAME/mwdras">GitHub</a> &nbsp;|&nbsp;
+     Built with plain HTML — no frameworks
+  </p>
+</footer>
+
+<script>
+  function showTab(btn, id) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(id).classList.add('active');
+  }
+</script>
+</body>
+</html>
