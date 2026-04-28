@@ -246,8 +246,8 @@ def run(result_json: Path, output_dir: Path, baseline_full_retrain_time_sec: Opt
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Paper4 result metrics calculator")
-    parser.add_argument("--result-json", required=True, help="Output JSON from paper4_meta_runner.py")
+    parser = argparse.ArgumentParser(description="MWDRAS result metrics calculator")
+    parser.add_argument("--result-json", required=True, help="Output JSON from mwdras_meta_runner.py")
     parser.add_argument("--output-dir", default="outputs_p4/analysis", help="Directory for metrics CSV/JSON")
     parser.add_argument(
         "--baseline-full-retrain-time-sec",

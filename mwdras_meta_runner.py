@@ -538,7 +538,7 @@ def run(config_path: Path) -> None:
     # We intentionally do not load/modify ROBIN checkpoint; path is tracked for protocol reproducibility.
     _ = cfg["wm_checkpoint_path"]
 
-    manifest_path = data_root / "paper4_task_manifest.json"
+    manifest_path = data_root / "task_manifest.json"
     manifest = _load_json(manifest_path)
     task_entries = {t["task_id"]: t for t in manifest["tasks"]}
 
@@ -608,7 +608,7 @@ def run(config_path: Path) -> None:
 
     calib_task_id = manifest.get("calibration_task_id")
     if calib_task_id is None:
-        raise ValueError("paper4_task_manifest.json must include calibration_task_id")
+        raise ValueError("task_manifest.json must include calibration_task_id")
 
     calib_task = build_task(calib_task_id, 5000)
 
@@ -663,7 +663,7 @@ def run(config_path: Path) -> None:
         raise RuntimeError("Best-checkpoint selection failed: no validation state was captured.")
 
     # Save best checkpoint requested for paper protocol.
-    best_ckpt_file = output_root / f"paper4_meta_{algo}_best.pt"
+    best_ckpt_file = output_root / f"meta_{algo}_best.pt"
     torch.save(best_state, best_ckpt_file)
 
     # Use best checkpoint for final test evaluation.
@@ -742,12 +742,12 @@ def run(config_path: Path) -> None:
     results["k_star_mean"] = float(np.mean(kstars)) if kstars else None
     results["time_to_target_mean_sec"] = float(np.mean(times)) if times else None
 
-    out_file = output_root / f"paper4_meta_{algo}_results.json"
+    out_file = output_root / f"meta_{algo}_results.json"
     with out_file.open("w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
 
     # Keep final checkpoint export for compatibility.
-    ckpt_file = output_root / f"paper4_meta_{algo}_init.pt"
+    ckpt_file = output_root / f"meta_{algo}_init.pt"
     torch.save({"w": learner.head.w.cpu(), "b": learner.head.b.cpu(), "tau_alpha": tau_alpha}, ckpt_file)
 
     print(f"[DONE] results: {out_file}")
@@ -756,7 +756,7 @@ def run(config_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Paper4 meta-learning runner (FOMAML/Reptile)")
-    parser.add_argument("--config", required=True, help="Path to minimal Paper4 JSON config")
+    parser = argparse.ArgumentParser(description="MWDRAS meta-learning runner (FOMAML/Reptile)")
+    parser.add_argument("--config", required=True, help="Path to minimal MWDRAS JSON config")
     args = parser.parse_args()
     run(Path(args.config))

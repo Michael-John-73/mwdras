@@ -1,11 +1,26 @@
 """Generate Fig. 1: Meta-Watermarking Pipeline Flow Diagram (PNG).
 v3: compact boxes sized to text, tighter vertical spacing, clear arrows.
 """
+from pathlib import Path
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
 import matplotlib.transforms as mtransforms
+
+
+WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _resolve_access_template_dir() -> Path:
+    candidates = sorted(WORKSPACE_ROOT.glob("*/ACCESS_latex_template_20240429"))
+    if not candidates:
+        raise FileNotFoundError("Could not find ACCESS_latex_template_20240429 under workspace root")
+    return candidates[0]
+
+
+ACCESS_TEMPLATE_DIR = _resolve_access_template_dir()
 
 # ── canvas ──
 fig, ax = plt.subplots(figsize=(20, 7.5))
@@ -347,9 +362,9 @@ ax.text(7.5,  4.6, '■ Meta-optimization',           fontsize=9, color=C_FM, fo
 ax.text(13.5, 4.6, '■ Online (per unseen attack)',  fontsize=9, color=C_P2, fontweight='bold')
 
 # ── Save ──
-plt.savefig('d:/RCE/PAPER4/ACCESS_latex_template_20240429/fig1_pipeline_flow.png',
+plt.savefig(ACCESS_TEMPLATE_DIR / 'fig1_pipeline_flow.png',
             dpi=200, bbox_inches='tight', facecolor='white', pad_inches=0.2)
-plt.savefig('d:/RCE/fig1_pipeline_flow.png',
+plt.savefig(WORKSPACE_ROOT / 'fig1_pipeline_flow.png',
             dpi=200, bbox_inches='tight', facecolor='white', pad_inches=0.2)
 plt.close()
 print("fig1_pipeline_flow.png generated successfully")

@@ -1,8 +1,23 @@
-"""Generate focused individual figures for Paper 4 (IEEE style)."""
+"""Generate focused individual figures for MWDRAS (IEEE style)."""
+from pathlib import Path
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
+
+
+WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _resolve_access_template_dir() -> Path:
+    candidates = sorted(WORKSPACE_ROOT.glob("*/ACCESS_latex_template_20240429"))
+    if not candidates:
+        raise FileNotFoundError("Could not find ACCESS_latex_template_20240429 under workspace root")
+    return candidates[0]
+
+
+ACCESS_TEMPLATE_DIR = _resolve_access_template_dir()
 
 # ── Shared style ──
 plt.rcParams.update({
@@ -108,9 +123,9 @@ ax1.legend(lines1 + lines2, labels1 + labels2,
            framealpha=0.9, edgecolor='#CCCCCC')
 ax1.set_title('Cost–Benefit: Generation Time vs. Recovery Steps')
 plt.tight_layout()
-plt.savefig('d:/RCE/PAPER4/ACCESS_latex_template_20240429/fig5_cost_benefit.png',
+plt.savefig(ACCESS_TEMPLATE_DIR / 'fig5_cost_benefit.png',
             dpi=200, bbox_inches='tight', pad_inches=0.15)
-plt.savefig('d:/RCE/fig4_cost_benefit.png',
+plt.savefig(WORKSPACE_ROOT / 'fig4_cost_benefit.png',
             dpi=200, bbox_inches='tight', pad_inches=0.15)
 plt.close()
 

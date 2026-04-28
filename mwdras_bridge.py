@@ -311,7 +311,7 @@ def _build_meta_config(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="ROBIN runtime bridge to Paper4 meta-learning")
+    parser = argparse.ArgumentParser(description="ROBIN runtime bridge to MWDRAS meta-learning")
     parser.add_argument("--robin-root", default="d:/RCE/robin_official")
     parser.add_argument("--bridge-output-root", default="d:/RCE/outputs_p4_runtime")
 
@@ -409,7 +409,7 @@ def main() -> None:
         step_counts = [int(s.strip()) for s in args.ddim_step_sweep.split(",")]
         _run_ddim_step_sweep(args, output_root, step_counts)
 
-    print("[RUN] Starting Paper4 meta runner from runtime ROBIN values...")
+    print("[RUN] Starting MWDRAS meta runner from runtime ROBIN values...")
     run_meta(cfg_path)
     print("[DONE] bridge pipeline complete.")
 
