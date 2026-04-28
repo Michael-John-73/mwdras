@@ -4,10 +4,10 @@
 
 > Official implementation of the paper:  
 > *"Meta-Watermarking for Detection Recovery under Attack Shift: Empirical Analysis of FOMAML-Based Fast Adaptation"*  
-> IEEE Access, 2026.
+> Submitted to IEEE Access.
 
 [![GitHub Pages](https://img.shields.io/badge/Project%20Page-GitHub%20Pages-blue?logo=github)](https://Michael-John-73.github.io/mwdras/)
-[![IEEE Access](https://img.shields.io/badge/Paper-IEEE%20Access-orange)](https://ieeexplore.ieee.org)
+[![Manuscript](https://img.shields.io/badge/Manuscript-Submitted%20to%20IEEE%20Access-orange)](#citation)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-green?logo=python)](requirements.txt)
 
 ---
@@ -190,11 +190,11 @@ The only ROBIN variables exposed to MWDRAS are listed in `robin_config.json`:
 ## Citation
 
 ```bibtex
-@article{yun2026mwdras,
+@misc{yun2026mwdras,
   title   = {Meta-Watermarking for Detection Recovery under Attack Shift:
              Empirical Analysis of FOMAML-Based Fast Adaptation},
   author  = {Yun, Hyeong Gyun and Park, Jung Min and Kim, Hye Young},
-  journal = {IEEE Access},
+  note    = {Submitted to IEEE Access},
   year    = {2026}
 }
 ```
