@@ -20,7 +20,7 @@
 
 ## Overview
 
-MWDRAS addresses a practical weakness of ring-pattern watermarks in diffusion models: detection accuracy degrades sharply when the image undergoes an unseen attack type at inference time. Rather than retraining a detector from scratch for every new attack, MWDRAS meta-trains a lightweight logistic detection head using **FOMAML** (First-Order Model-Agnostic Meta-Learning), so the head can recover to ≥90% TPR at ≤5% FPR within **1–4 gradient steps** on a small support set.
+MWDRAS addresses a practical weakness of ring-pattern watermarks in diffusion models: detection accuracy degrades when the image undergoes an unseen attack type at inference time. Rather than retraining a detector from scratch for every new attack, MWDRAS meta-trains a lightweight logistic detection head using **FOMAML** (First-Order Model-Agnostic Meta-Learning). In the paper setting, recovery is measured by the minimum adaptation step needed to satisfy a fixed operating point of TPR ≥ 0.6 and FPR ≤ 0.17. On the unseen rotation task at N=128, the meta-initialized detector reaches zero-shot recovery (k*=0) with TPR=0.875 and FPR=0.063, whereas full retraining requires k*=2.
 
 The watermark substrate is **ROBIN** ([Liu et al., NeurIPS 2024](https://arxiv.org/abs/2410.04votre)), used as-is without modification. MWDRAS operates entirely on the ROBIN score layer.
 
@@ -69,24 +69,24 @@ python mwdras_bridge.py \
   --model-id    stabilityai/stable-diffusion-2-1-base \
   --wm-path     /path/to/ckpts/no_training_r5_15.pt \
   --end 64 \
-  --bridge-output-root ./outputs
+  --bridge-output-root ./outputs_mwdras_64img
 ```
 
 The pipeline:
 1. Calls ROBIN (`inject_wm_inner_latent_robin.py`) to generate clean/watermarked score dumps across 7 attacks.
 2. Builds the task manifest and per-attack feature files.
 3. Runs FOMAML meta-training and evaluates Meta vs. Baselines B1–B3.
-4. Saves results to `./outputs/meta_out/meta_fomaml_results.json`.
+4. Saves results to `./outputs_mwdras_64img/meta_out/meta_fomaml_results.json`.
 
 ### 4. Skip ROBIN (use existing score dump)
 
 ```bash
 python mwdras_bridge.py \
   --skip-robin-run \
-  --existing-score-dump ./outputs/robin_runtime_score_dump.json \
+  --existing-score-dump ./outputs_mwdras_64img/robin_runtime_score_dump.json \
   --model-id stabilityai/stable-diffusion-2-1-base \
   --wm-path  /path/to/ckpts/no_training_r5_15.pt \
-  --bridge-output-root ./outputs
+  --bridge-output-root ./outputs_mwdras_64img
 ```
 
 ### 5. Reproduce figures
@@ -119,21 +119,21 @@ ROBIN score dump  ──►  Task split (train/val/test)
 | B2 | Generic Fine-tune | Mean of train-task adapted weights → fine-tune |
 | B3 | Threshold-only | Frozen weights, per-task threshold recalibration |
 
-### Key Results (scale = 64 images)
+### Paper-Aligned Highlights
 
-| Method | k* (mean) | TPR@k* | FPR@k* | Recovery Rate | Rel. Compute |
-|--------|-----------|--------|--------|---------------|--------------|
-| **Meta (FOMAML)** | **1** | **0.91** | 0.04 | **100%** | **1×** |
-| B1 Full Retrain | 4 | 0.90 | 0.05 | 100% | 43,000× |
-| B2 Generic FT | 2 | 0.88 | 0.06 | 86% | 2× |
-| B3 Threshold | — | 0.72 | 0.05 | 0% | <1× |
+| Setting | Meta result | Comparator | Note |
+|---------|-------------|------------|------|
+| Rotation, N=128 | k*=0, TPR=0.875, FPR=0.063 | Full retraining: k*=2 | Zero-shot recovery on the unseen rotation task |
+| Rotation, N≥64 | k*=0 | — | Zero-shot recovery is sustained across the tested rotation scales |
+| Noise task | Limited recovery | Threshold-only can be stronger at some scales | Recovery remains task-dependent under high-noise corruption |
+| Decision time | 0.079 ms per image after shared DDIM inversion | 43,000× classification-stage-only speedup | End-to-end latency is still dominated by the shared DDIM inversion stage |
 
 <p align="center">
   <img src="docs/assets/fig2_recovery_kstar.png" width="48%" alt="Fig 2: k* by attack"/>
   <img src="docs/assets/fig3_tpr_vs_scale.png"   width="48%" alt="Fig 3: TPR vs scale"/>
 </p>
 <p align="center">
-  <em>Left: k* by attack type (FOMAML reaches target at k*=1 for all attacks). &nbsp; Right: TPR across scales 32–256.</em>
+  <em>Left: rotation-task recovery step across scales. &nbsp; Right: zero-shot TPR across scales, peaking at N=128.</em>
 </p>
 
 <p align="center">
@@ -141,14 +141,14 @@ ROBIN score dump  ──►  Task split (train/val/test)
   <img src="docs/assets/fig4_adaptation_trajectory.png" width="48%" alt="Fig 4: Adaptation"/>
 </p>
 <p align="center">
-  <em>Left: Cost-benefit sweet spot ★ at scale=64. &nbsp; Right: TPR adaptation trajectory (converges within 1–2 steps).</em>
+  <em>Left: cost-benefit trade-off, with N=128 as the paper's preferred operating point. &nbsp; Right: rotation-task TPR adaptation trajectory across scales.</em>
 </p>
 
 <p align="center">
   <img src="docs/assets/fig6_spearman_scatter.png" width="100%" alt="Fig 6: Spearman"/>
 </p>
 <p align="center">
-  <em>Spearman ρ=0.87 (p&lt;0.01) — k* increases monotonically with attack severity (MCS=1.0).</em>
+  <em>Exploratory five-scale Spearman correlations between training scale and recovery metrics.</em>
 </p>
 
 ---
@@ -180,6 +180,8 @@ The only ROBIN variables exposed to MWDRAS are listed in `robin_config.json`:
 | Watermark checkpoint | `ckpts/no_training_r5_15.pt` (random init, no training) |
 | `global_seed` | 123 |
 | `split_seed` | 456 |
+| `alpha_fpr` | 0.17 |
+| `tpr_target_beta` | 0.6 |
 | Calibration | Fixed threshold from no-attack support set (B3 recalibrates per task) |
 | ROBIN substrate | Unmodified `robin_official/` |
 
@@ -191,7 +193,7 @@ The only ROBIN variables exposed to MWDRAS are listed in `robin_config.json`:
 @article{yun2026mwdras,
   title   = {Meta-Watermarking for Detection Recovery under Attack Shift:
              Empirical Analysis of FOMAML-Based Fast Adaptation},
-  author  = {Yun, Hyun-Gyo and Kim, Jae-Young and Lee, Hye-Jin},
+  author  = {Yun, Hyeong Gyun and Park, Jung Min and Kim, Hye Young},
   journal = {IEEE Access},
   year    = {2026}
 }

@@ -135,7 +135,7 @@
   <p class="subtitle">Meta-Watermarking for Detection Recovery under Attack Shift</p>
   <p class="paper-title">"Meta-Watermarking for Detection Recovery under Attack Shift:<br>Empirical Analysis of FOMAML-Based Fast Adaptation"</p>
   <div class="links">
-    <a href="https://github.com/YOUR_USERNAME/mwdras">⬡ GitHub</a>
+    <a href="https://github.com/Michael-John-73/mwdras">⬡ GitHub</a>
     <a href="https://ieeexplore.ieee.org">📄 Paper (IEEE Access)</a>
     <a href="#results">📊 Results</a>
     <a href="#quickstart">🚀 Quick Start</a>
@@ -150,19 +150,21 @@
     <p>
       Ring-pattern watermarks embedded in diffusion model latents (e.g., ROBIN) suffer a critical vulnerability:
       detection accuracy drops sharply when images undergo an <em>unseen</em> attack type at inference time.
-      MWDRAS solves this without retraining from scratch.
+      MWDRAS studies how to recover detection quality without retraining from scratch.
     </p>
     <p>
       Using <strong>FOMAML</strong> (First-Order MAML), we meta-train a lightweight logistic detection head
-      so it can recover to <strong>≥90% TPR at ≤5% FPR</strong> within just <strong>1–4 gradient steps</strong>
-      on a small per-task support set — orders of magnitude faster than full retraining.
+      under a paper operating point of <strong>TPR ≥ 0.6</strong> and <strong>FPR ≤ 0.17</strong>.
+      On the unseen rotation task at <strong>N=128</strong>, the meta-initialized detector reaches
+      <strong>zero-shot recovery (k*=0)</strong> with <strong>TPR=0.875</strong> and <strong>FPR=0.063</strong>,
+      whereas full retraining requires <strong>k*=2</strong>.
     </p>
 
     <div class="cards">
       <div class="card">
         <div class="icon">⚡</div>
         <h3>Fast Recovery</h3>
-        <p>k* = 1 adaptation step to reach 90% TPR on unseen attacks</p>
+        <p>Rotation, N=128: k*=0 with TPR=0.875 and FPR=0.063</p>
       </div>
       <div class="card">
         <div class="icon">🛡️</div>
@@ -172,12 +174,12 @@
       <div class="card">
         <div class="icon">🔬</div>
         <h3>Empirical Analysis</h3>
-        <p>Full evaluation across 7 attacks + 63 attack combinations at 5 dataset scales</p>
+        <p>Full evaluation across 7 attacks, 4 methods, and 5 data scales (16–256)</p>
       </div>
       <div class="card">
         <div class="icon">📐</div>
-        <h3>Theoretical Bound</h3>
-        <p>Proposition 1: asymptotic convergence guarantee for FOMAML head recovery</p>
+        <h3>Analytical Motivation</h3>
+        <p>Adapted proposition + proof sketch, interpreted via empirical consistency checks</p>
       </div>
     </div>
   </section>
@@ -213,9 +215,8 @@
   <!-- Results -->
   <section id="results">
     <h2>Experimental Results</h2>
-    <p>All experiments use SD 2.1-base with ROBIN ring watermark (r∈[5,15]), 7 attack types, and 5 dataset scales (32–256 images).</p>
+    <p>All experiments use SD 2.1-base with the official ROBIN ring watermark, 7 attack types, 4 methods, and 5 data scales (16–256 images).</p>
 
-    <!-- Fig 1: Pipeline -->
     <div class="result-block">
       <h3>Fig. 1 — Meta-Watermarking Pipeline Overview</h3>
       <div class="fig-grid">
@@ -223,117 +224,112 @@
           <img src="assets/fig1_pipeline_flow.png" alt="Pipeline Overview" onclick="openLightbox(this)"/>
           <div class="fig-caption">
             <strong>Pipeline Overview</strong>
-            Phase 1 (green): ROBIN watermark embedding. Phase 2 (yellow): FOMAML meta-training loop (inner/outer). Phase 3 (blue): k-step fast adaptation on new attack task.
+            Phase 1 (green): ROBIN watermark embedding. Phase 2 (yellow): FOMAML meta-training loop (inner/outer). Phase 3 (blue): k-step fast adaptation on a held-out attack task.
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Fig 2+3: Recovery & TPR vs Scale -->
     <div class="result-block">
-      <h3>Q1 — Recovery Performance: k* and TPR across Attacks</h3>
+      <h3>Recovery Performance Across Scales</h3>
       <div class="fig-grid">
         <div class="fig-item">
           <img src="assets/fig2_recovery_kstar.png" alt="Recovery k*" onclick="openLightbox(this)"/>
           <div class="fig-caption">
-            <strong>Fig. 2 — k* by Attack Type (scale=64)</strong>
-            FOMAML reaches target (TPR≥0.90, FPR≤0.05) in k*=1 for all 6 attacks. B1 full retrain requires k=4 on average.
+            <strong>Fig. 2 — Rotation-task k* across scales</strong>
+            The meta-initialized detector reaches k*=0 from N≥64, whereas B1 does not recover at N=32 or N=64.
           </div>
         </div>
         <div class="fig-item">
           <img src="assets/fig3_tpr_vs_scale.png" alt="TPR vs Scale" onclick="openLightbox(this)"/>
           <div class="fig-caption">
             <strong>Fig. 3 — TPR vs. Dataset Scale</strong>
-            Meta (FOMAML) maintains ≥0.90 TPR across all scales (32–256). B3 threshold-only degrades sharply at small scales.
+            Zero-shot TPR peaks at N=128 and exceeds the paper target β=0.6 from N≥64 onward.
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Q1 Table -->
     <div class="result-block">
-      <h3>Table I — Q1: Method Comparison at Scale = 64</h3>
+      <h3>Paper-Aligned Highlights</h3>
       <table>
         <thead>
-          <tr><th>Method</th><th>k* (mean)</th><th>TPR @ k*</th><th>FPR @ k*</th><th>Recovery Rate</th><th>Rel. Compute</th></tr>
+          <tr><th>Setting</th><th>Meta result</th><th>Comparator</th><th>Note</th></tr>
         </thead>
         <tbody>
-          <tr><td><strong>Meta (FOMAML)</strong></td><td class="best">1</td><td class="best">0.91</td><td>0.04</td><td class="best">100%</td><td class="best">1×</td></tr>
-          <tr><td>B1 – Full Retrain</td><td>4</td><td>0.90</td><td>0.05</td><td>100%</td><td>43,000×</td></tr>
-          <tr><td>B2 – Generic Fine-tune</td><td>2</td><td>0.88</td><td>0.06</td><td>86%</td><td>2×</td></tr>
-          <tr><td>B3 – Threshold-only</td><td>—</td><td>0.72</td><td>0.05</td><td>0%</td><td>&lt;1×</td></tr>
+          <tr><td>Rotation, N=128</td><td>k*=0, TPR=0.875, FPR=0.063</td><td>Full retraining: k*=2</td><td>Zero-shot recovery on the unseen rotation task</td></tr>
+          <tr><td>Rotation, N≥64</td><td>k*=0</td><td>—</td><td>Zero-shot recovery is sustained across the tested rotation scales</td></tr>
+          <tr><td>Noise task</td><td>Limited recovery</td><td>Threshold-only can be stronger at some scales</td><td>Recovery remains task-dependent under high-noise corruption</td></tr>
+          <tr><td>Decision time</td><td>0.079 ms after shared DDIM inversion</td><td>43,000× classification-stage-only speedup</td><td>End-to-end latency is still dominated by the shared DDIM inversion stage</td></tr>
         </tbody>
       </table>
-      <p class="result-note">k*: minimum adaptation steps to reach TPR≥0.90 at FPR≤0.05. Relative compute vs. Meta at k*=1.</p>
+      <p class="result-note">Paper operating point: TPR ≥ 0.6 and FPR ≤ 0.17.</p>
     </div>
 
-    <!-- Fig 5: Cost-Benefit -->
     <div class="result-block">
-      <h3>Q2 — Cost-Benefit: Generation Time vs. k*</h3>
+      <h3>Cross-Scale Cost-Benefit and Adaptation Behavior</h3>
       <div class="fig-grid">
         <div class="fig-item">
           <img src="assets/fig5_cost_benefit.png" alt="Cost-Benefit" onclick="openLightbox(this)"/>
           <div class="fig-caption">
             <strong>Fig. 5 — Cost-Benefit Analysis</strong>
-            Sweet spot at scale=64 (★): lowest k* with stable TPR. Larger scales show diminishing returns in recovery speed.
+            The paper treats N=128 as the preferred operating point because it combines k*=0, the highest zero-shot TPR, and lower generation cost than N=256.
           </div>
         </div>
         <div class="fig-item">
           <img src="assets/fig4_adaptation_trajectory.png" alt="Adaptation Trajectory" onclick="openLightbox(this)"/>
           <div class="fig-caption">
             <strong>Fig. 4 — Adaptation Trajectory</strong>
-            TPR converges toward target β=0.90 within 1–2 inner steps for FOMAML, confirming the theoretical bound (Proposition 1).
+            On the rotation task, TPR starts above β=0.6 from N≥64; at N≥128, additional gradient steps can initially reduce TPR before partial recovery.
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Q2 Table -->
     <div class="result-block">
-      <h3>Table II — Q2: Scale vs. k* (FOMAML)</h3>
+      <h3>Cross-Scale Rotation Summary</h3>
       <table>
         <thead>
-          <tr><th>Scale (images)</th><th>k* (mean)</th><th>TPR</th><th>FPR</th><th>Gen. Time (s)</th></tr>
+          <tr><th>Scale (images)</th><th>k*</th><th>TPR @ k=0</th><th>FPR @ k=0</th><th>AUC</th></tr>
         </thead>
         <tbody>
-          <tr><td>32</td><td>2</td><td>0.88</td><td>0.05</td><td>~42</td></tr>
-          <tr><td class="best">64 ★</td><td class="best">1</td><td class="best">0.91</td><td>0.04</td><td>~85</td></tr>
-          <tr><td>128</td><td>1</td><td>0.93</td><td>0.04</td><td>~170</td></tr>
-          <tr><td>256</td><td>1</td><td>0.94</td><td>0.03</td><td>~340</td></tr>
+          <tr><td>16</td><td>4</td><td>0.000</td><td>0.000</td><td>0.806</td></tr>
+          <tr><td>32</td><td>1</td><td>0.300</td><td>0.000</td><td>0.880</td></tr>
+          <tr><td>64</td><td>0</td><td>0.688</td><td>0.000</td><td>0.930</td></tr>
+          <tr><td class="best">128</td><td class="best">0</td><td class="best">0.875</td><td>0.063</td><td>0.918</td></tr>
+          <tr><td>256</td><td>0</td><td>0.750</td><td>0.000</td><td>0.941</td></tr>
         </tbody>
       </table>
-      <p class="result-note">★ Sweet spot: scale=64 achieves k*=1 at minimum generation cost.</p>
+      <p class="result-note">N=128 is the paper's preferred operating point, while N=256 provides the highest AUC at higher generation cost.</p>
     </div>
 
-    <!-- Fig 6: Spearman -->
     <div class="result-block">
-      <h3>Q3 — Severity Correlation: Spearman ρ</h3>
+      <h3>Exploratory Scaling Correlations</h3>
       <div class="fig-grid">
         <div class="fig-item">
           <img src="assets/fig6_spearman_scatter.png" alt="Spearman Scatter" onclick="openLightbox(this)"/>
           <div class="fig-caption">
-            <strong>Fig. 6 — Spearman Correlation: k* vs. Attack Severity</strong>
-            ρ=0.87 (p&lt;0.01) confirms that k* increases monotonically with attack severity — meta-initialization is most efficient on mild attacks.
+            <strong>Fig. 6 — Spearman Correlations Across Data Scale</strong>
+            Exploratory five-scale correlations indicate that larger training sets are associated with fewer recovery steps and higher zero-shot TPR.
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Q3 Table -->
     <div class="result-block">
-      <h3>Table III — Q3: Severity Analysis (MCS / Severity Index)</h3>
+      <h3>Selected Exploratory Statistics</h3>
       <table>
         <thead>
-          <tr><th>Severity Level</th><th>Attacks</th><th>Mean k*</th><th>Mean TPR</th><th>MCS</th></tr>
+          <tr><th>Variable Pair</th><th>Spearman ρ</th><th>p-value</th><th>Raw p&lt;0.05</th></tr>
         </thead>
         <tbody>
-          <tr><td>s=0 (none)</td><td>none</td><td>0</td><td>0.95</td><td rowspan="4" style="vertical-align:middle; text-align:center;"><strong>1.0</strong><br><span style="font-size:0.78rem;color:var(--muted)">(fully monotone)</span></td></tr>
-          <tr><td>s=1 (single)</td><td>rotation, jpeg, …</td><td>1</td><td>0.91</td></tr>
-          <tr><td>s=2 (double)</td><td>rotation+noise, …</td><td>2</td><td>0.87</td></tr>
-          <tr><td>s=3+ (triple+)</td><td>combinations</td><td>3–4</td><td>0.81</td></tr>
+          <tr><td>N ↔ TPR@k=0</td><td>+0.900</td><td>0.037</td><td>Yes</td></tr>
+          <tr><td>N ↔ k*</td><td>-0.894</td><td>0.041</td><td>Yes</td></tr>
+          <tr><td>Meta AUC ↔ k*</td><td>-0.894</td><td>0.041</td><td>Yes</td></tr>
+          <tr><td>Meta AUC ↔ TPR@k=0</td><td>+0.700</td><td>0.188</td><td>No</td></tr>
         </tbody>
       </table>
-      <p class="result-note">MCS (Monotone Consistency Score) = 1.0: k* increases and TPR decreases strictly with severity. Severity Index SI = −0.031 (TPR/severity slope).</p>
+      <p class="result-note">These statistics are exploratory because the analysis uses only five scales and a single random seed.</p>
     </div>
   </section>
 
@@ -344,8 +340,8 @@
       <span class="dir">MWDRAS/</span><br>
       ├── <span class="highlight">mwdras_bridge.py</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Entry point — orchestrates ROBIN → meta-learner</span><br>
       ├── <span class="highlight">mwdras_meta_learners.py</span> &nbsp;<span class="comment"># FOMAMLLearner, ReptileLearner, evaluate_recovery_kstar</span><br>
-      ├── mwdras_meta_runner.py &nbsp;&nbsp;<span class="comment"># Meta-train loop, baselines B1–B3, all Q1/Q2/Q3 analyses</span><br>
-      ├── mwdras_result_metrics.py <span class="comment"># MCS, Severity Index, bootstrap CI</span><br>
+      ├── mwdras_meta_runner.py &nbsp;&nbsp;<span class="comment"># Meta-training + baseline evaluation pipeline</span><br>
+      ├── mwdras_result_metrics.py <span class="comment"># Severity metrics, MCS, SI, bootstrap CI</span><br>
       ├── gen_figures.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Reproduces Fig. 2–6</span><br>
       ├── gen_flow.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Reproduces Fig. 1 pipeline diagram</span><br>
       ├── <span class="highlight">robin_config.json</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># ROBIN parameter mapping (edit paths before use)</span><br>
@@ -382,17 +378,17 @@ python mwdras_bridge.py \
   --model-id    stabilityai/stable-diffusion-2-1-base \
   --wm-path     /path/to/ckpts/no_training_r5_15.pt \
   --end 64 \
-  --bridge-output-root ./outputs</code></pre>
+  --bridge-output-root ./outputs_mwdras_64img</code></pre>
     </div>
 
     <div id="t2" class="tab-panel">
       <pre><code># Use an existing ROBIN score dump (no GPU needed for meta-learning)
 python mwdras_bridge.py \
   --skip-robin-run \
-  --existing-score-dump ./outputs/robin_runtime_score_dump.json \
+  --existing-score-dump ./outputs_mwdras_64img/robin_runtime_score_dump.json \
   --model-id stabilityai/stable-diffusion-2-1-base \
   --wm-path  /path/to/ckpts/no_training_r5_15.pt \
-  --bridge-output-root ./outputs</code></pre>
+  --bridge-output-root ./outputs_mwdras_64img</code></pre>
     </div>
 
     <div id="t3" class="tab-panel">
@@ -408,7 +404,7 @@ python gen_flow.py      # Fig. 1: pipeline diagram</code></pre>
         <tr><td><code>robin_runtime_score_dump.json</code></td><td>ROBIN raw scores per attack</td></tr>
         <tr><td><code>task_manifest.json</code></td><td>Task split definition</td></tr>
         <tr><td><code>meta_config_fomaml.json</code></td><td>Meta-learning configuration snapshot</td></tr>
-        <tr><td><code>meta_out/meta_fomaml_results.json</code></td><td>Full evaluation results (Q1/Q2/Q3)</td></tr>
+        <tr><td><code>meta_out/meta_fomaml_results.json</code></td><td>Full recovery, bound-check, and amortized-verification results</td></tr>
         <tr><td><code>meta_out/meta_fomaml_best.pt</code></td><td>Best meta-initialization checkpoint</td></tr>
       </tbody>
     </table>
@@ -440,7 +436,7 @@ python gen_flow.py      # Fig. 1: pipeline diagram</code></pre>
     <pre><code>@article{yun2026mwdras,
   title   = {Meta-Watermarking for Detection Recovery under Attack Shift:
              Empirical Analysis of FOMAML-Based Fast Adaptation},
-  author  = {Yun, Hyun-Gyo and Kim, Jae-Young and Lee, Hye-Jin},
+  author  = {Yun, Hyeong Gyun and Park, Jung Min and Kim, Hye Young},
   journal = {IEEE Access},
   year    = {2026}
 }</code></pre>
@@ -450,7 +446,7 @@ python gen_flow.py      # Fig. 1: pipeline diagram</code></pre>
 
 <footer>
   <p>MWDRAS &nbsp;|&nbsp; IEEE Access 2026 &nbsp;|&nbsp;
-     <a href="https://github.com/YOUR_USERNAME/mwdras">GitHub</a> &nbsp;|&nbsp;
+     <a href="https://github.com/Michael-John-73/mwdras">GitHub</a> &nbsp;|&nbsp;
      Built with plain HTML — no frameworks
   </p>
 </footer>

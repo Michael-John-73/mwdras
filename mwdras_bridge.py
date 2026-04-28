@@ -313,7 +313,7 @@ def _build_meta_config(
 def main() -> None:
     parser = argparse.ArgumentParser(description="ROBIN runtime bridge to MWDRAS meta-learning")
     parser.add_argument("--robin-root", default="d:/RCE/robin_official")
-    parser.add_argument("--bridge-output-root", default="d:/RCE/outputs_p4_runtime")
+    parser.add_argument("--bridge-output-root", default="d:/RCE/outputs_mwdras_runtime")
 
     parser.add_argument("--run-name", default="mwdras_runtime_bridge")
     parser.add_argument("--start", type=int, default=0)

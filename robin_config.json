@@ -133,8 +133,8 @@
   },
 
   "usage_example": {
-    "basic": "python mwdras_bridge.py --robin-root /path/to/robin_official --model-id stabilityai/stable-diffusion-2-1-base --wm-path /path/to/ckpts/no_training_r5_15.pt --end 64 --bridge-output-root ./outputs",
-    "skip_robin_run": "python mwdras_bridge.py --skip-robin-run --existing-score-dump ./outputs/robin_runtime_score_dump.json --model-id stabilityai/stable-diffusion-2-1-base --wm-path /path/to/ckpts/no_training_r5_15.pt --bridge-output-root ./outputs",
-    "combo_mode": "python mwdras_bridge.py --robin-root /path/to/robin_official --model-id stabilityai/stable-diffusion-2-1-base --wm-path /path/to/ckpts/no_training_r5_15.pt --end 64 --combo-mode --max-severity 3 --bridge-output-root ./outputs"
+    "basic": "python mwdras_bridge.py --robin-root /path/to/robin_official --model-id stabilityai/stable-diffusion-2-1-base --wm-path /path/to/ckpts/no_training_r5_15.pt --end 64 --bridge-output-root ./outputs_mwdras_64img",
+    "skip_robin_run": "python mwdras_bridge.py --skip-robin-run --existing-score-dump ./outputs_mwdras_64img/robin_runtime_score_dump.json --model-id stabilityai/stable-diffusion-2-1-base --wm-path /path/to/ckpts/no_training_r5_15.pt --bridge-output-root ./outputs_mwdras_64img",
+    "combo_mode": "python mwdras_bridge.py --robin-root /path/to/robin_official --model-id stabilityai/stable-diffusion-2-1-base --wm-path /path/to/ckpts/no_training_r5_15.pt --end 64 --combo-mode --max-severity 3 --bridge-output-root ./outputs_mwdras_64img"
   }
 }
