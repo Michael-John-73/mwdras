@@ -34,6 +34,8 @@ MWDRAS/
 ├── mwdras_meta_learners.py   # FOMAMLLearner, ReptileLearner, evaluation utilities
 ├── mwdras_meta_runner.py     # Meta-training + baseline evaluation pipeline
 ├── mwdras_result_metrics.py  # Severity metrics, MCS, SI, bootstrap CI
+├── mwdras_multiseed.py       # R2-1 multi-seed robustness sweep (5 seeds x 6 scales)
+├── mwdras_composite.py       # R2-2 composite-attack scaling (rotation+jpeg / +cropping)
 ├── gen_figures.py            # Reproduces all paper figures (Fig. 2–6)
 ├── gen_flow.py               # Reproduces Fig. 1 pipeline diagram
 ├── robin_config.json         # ROBIN parameter mapping for bridge (edit before use)
@@ -95,6 +97,24 @@ python mwdras_bridge.py \
 python gen_figures.py   # Fig. 2–6
 python gen_flow.py      # Fig. 1 (pipeline diagram)
 ```
+
+### 6. Multi-seed and composite-attack analyses
+
+These reuse the score dumps produced above (no GPU needed). Run the pipeline
+once per scale first, then:
+
+```bash
+# R2-1: seed-stability over 5 seeds x 6 scales (rotation, noise)
+python mwdras_multiseed.py --scales 16 32 64 128 256 512 --seeds 5
+
+# R2-2: held-out composite attacks (rotation+jpeg, rotation+cropping).
+# First generate the composite score dump per scale (bridge composite mode):
+python mwdras_bridge.py --composite --end 512 \
+  --bridge-output-root ./outputs_mwdras_512img_composite
+python mwdras_composite.py --scales 16 32 64 128 256 512 --seeds 5
+```
+
+Results are written to `MULTISEED_RESULTS.json` and `COMPOSITE_RESULTS.json`.
 
 ---
 
