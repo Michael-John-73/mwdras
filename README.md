@@ -22,7 +22,7 @@
 
 MWDRAS addresses a practical weakness of ring-pattern watermarks in diffusion models: detection accuracy degrades when the image undergoes an unseen attack type at inference time. Rather than retraining a detector from scratch for every new attack, MWDRAS meta-trains a lightweight logistic detection head using **FOMAML** (First-Order Model-Agnostic Meta-Learning). In the paper setting, recovery is measured by the minimum adaptation step needed to satisfy a fixed operating point of TPR ≥ 0.6 and FPR ≤ 0.17. On the unseen rotation task at N=128, the meta-initialized detector reaches zero-shot recovery (k*=0) with TPR=0.875 and FPR=0.063, whereas full retraining requires k*=2.
 
-The watermark substrate is **ROBIN** ([Liu et al., NeurIPS 2024](https://arxiv.org/abs/2410.04votre)), used as-is without modification. MWDRAS operates entirely on the ROBIN score layer.
+The watermark substrate is **ROBIN** ([Huang et al., NeurIPS 2024](https://github.com/XuandongZhao/ROBIN)), used as-is without modification. MWDRAS operates entirely on the ROBIN score layer. Experiments span **six data scales (N = 16–512)** and are validated across five random seeds; composite attacks (rotation+cropping, rotation+JPEG) are evaluated as held-out shifts.
 
 ---
 
@@ -124,7 +124,9 @@ ROBIN score dump  ──►  Task split (train/val/test)
 | Setting | Meta result | Comparator | Note |
 |---------|-------------|------------|------|
 | Rotation, N=128 | k*=0, TPR=0.875, FPR=0.063 | Full retraining: k*=2 | Zero-shot recovery on the unseen rotation task |
-| Rotation, N≥64 | k*=0 | — | Zero-shot recovery is sustained across the tested rotation scales |
+| Rotation, N=64–256 | k*=0 | — | Zero-shot recovery sustained; the single-seed N=512 run does not recover (seed variance — multi-seed mean AUC 0.899) |
+| Multi-seed (5 seeds) | Rotation AUC 0.82–0.92 across all six scales | — | Scaling trends are seed-stable |
+| Composite attacks | rot+crop recovered (AUC 0.88–0.95); rot+JPEG partial (AUC ≈ 0.70) | — | rot+JPEG exposes a representational limit of the 10-D radial signature |
 | Noise task | Limited recovery | Threshold-only can be stronger at some scales | Recovery remains task-dependent under high-noise corruption |
 | Decision time | 0.079 ms per image after shared DDIM inversion | 43,000× classification-stage-only speedup | End-to-end latency is still dominated by the shared DDIM inversion stage |
 
@@ -148,7 +150,7 @@ ROBIN score dump  ──►  Task split (train/val/test)
   <img src="docs/assets/fig6_spearman_scatter.png" width="100%" alt="Fig 6: Spearman"/>
 </p>
 <p align="center">
-  <em>Exploratory five-scale Spearman correlations between training scale and recovery metrics.</em>
+  <em>Exploratory Spearman correlations (five-scale fit). All six scales are plotted; N=512 is shown as a distinct marker — its single-seed k* is undefined (FAIL) and its zero-shot TPR is a seed-variance outlier, validated separately in the multi-seed analysis.</em>
 </p>
 
 ---

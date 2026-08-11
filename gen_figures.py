@@ -1,3 +1,14 @@
+"""Regenerate all paper figures (Fig. 2-6) at six data scales (16-512).
+
+Self-contained: the canonical per-scale values below are the re-measured
+single-seed numbers used in the manuscript (rotation task, meta-initialized
+detector), including the largest scale N=512. Figures are written to
+docs/assets/ (referenced by the README and the paper).
+
+Fig. 1 (pipeline diagram) is produced separately by gen_flow.py.
+
+    python gen_figures.py
+"""
 from pathlib import Path
 
 import matplotlib
@@ -5,186 +16,199 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
-
-# ── Shared style ──
 plt.rcParams.update({
     'font.size': 12, 'axes.titlesize': 13, 'axes.labelsize': 12,
     'xtick.labelsize': 11, 'ytick.labelsize': 11, 'legend.fontsize': 10,
     'figure.dpi': 200, 'savefig.bbox': 'tight', 'savefig.pad_inches': 0.15,
 })
 
-# ── Data ──
-scales = [16, 32, 64, 128, 256]
-kstar_meta = [4, 1, 0, 0, 0]
-kstar_b1   = [2, None, None, 2, 1]
-tpr_k0_rot = [0.000, 0.300, 0.688, 0.875, 0.750]
-auc_meta   = [0.806, 0.880, 0.930, 0.918, 0.941]
-gen_time   = [12.8, 25.6, 51.2, 102.4, 204.7]  # minutes
-best_iter  = [200, 450, 250, 50, 50]
+ASSETS = Path(__file__).resolve().parent / 'docs' / 'assets'
+ASSETS.mkdir(parents=True, exist_ok=True)
 
-# ── Fig 2: Recovery step k* vs scale (Q1 core) ──
-fig, ax = plt.subplots(figsize=(5.5, 3.8))
-x = np.arange(len(scales))
-w = 0.35
-bars_meta = ax.bar(x - w/2, kstar_meta, w, label='Meta (FOMAML)', color='#2196F3', edgecolor='white')
-kstar_b1_plot = [v if v is not None else 5.5 for v in kstar_b1]
-colors_b1 = ['#FF7043' if v is not None else '#FFCCBC' for v in kstar_b1]
-bars_b1 = ax.bar(x + w/2, kstar_b1_plot, w, label='B1 (Full Retrain)', color=colors_b1, edgecolor='white')
-# Mark FAIL
-for i, v in enumerate(kstar_b1):
-    if v is None:
-        ax.text(i + w/2, 5.5 + 0.15, 'FAIL', ha='center', va='bottom', fontsize=9, color='red', fontweight='bold')
-    else:
-        ax.text(i + w/2, v + 0.15, str(v), ha='center', va='bottom', fontsize=9)
-for i, v in enumerate(kstar_meta):
-    ax.text(i - w/2, v + 0.15, str(v), ha='center', va='bottom', fontsize=9, fontweight='bold')
 
+def save(fig, name):
+    fig.savefig(ASSETS / name)
+
+
+# ── Canonical six-scale data (rotation task, meta-initialized detector) ──
+scales6 = [16, 32, 64, 128, 256, 512]
+kstar_meta6 = [2, 1, 0, 0, 0, None]          # None = no recovery within the grid (FAIL)
+kstar_b16 = [None, None, None, 2, 1, None]
+tpr_k0_6 = [0.125, 0.300, 0.688, 0.875, 0.750, 0.188]
+gen_time6 = [12.8, 25.6, 51.2, 102.4, 204.7, 409.4]  # minutes, ~0.8 min/image
+FAILY = 5.5
+
+# Rotation TPR trajectory over adaptation steps k, per scale (real single-seed).
+ks_traj = [0, 1, 2, 4, 8, 16, 32]
+tpr_traj = {
+    16:  [0.125, 0.375, 0.750, 0.875, 0.875, 0.875, 0.875],
+    32:  [0.300, 0.700, 0.800, 1.000, 1.000, 1.000, 1.000],
+    64:  [0.688, 0.938, 0.938, 1.000, 1.000, 0.938, 0.938],
+    128: [0.875, 0.562, 0.562, 0.750, 0.875, 0.938, 0.938],
+    256: [0.750, 0.438, 0.438, 0.625, 0.812, 0.812, 0.875],
+    512: [0.188, 0.188, 0.188, 0.375, 0.625, 0.750, 0.812],
+}
+kstar_traj = {16: 2, 32: 1, 64: 0, 128: 0, 256: 0, 512: None}
+traj_style = {
+    16: ('#EF5350', 'o'), 32: ('#FFA726', 's'), 64: ('#66BB6A', '^'),
+    128: ('#42A5F5', 'D'), 256: ('#AB47BC', 'v'), 512: ('#00897B', 'P'),
+}
+
+
+# ── Fig 2: Recovery step k* vs scale ──
+fig, ax = plt.subplots(figsize=(6.0, 3.9))
+x = np.arange(len(scales6))
+w = 0.38
+meta_plot = [v if v is not None else FAILY for v in kstar_meta6]
+b1_plot = [v if v is not None else FAILY for v in kstar_b16]
+cmeta = ['#2196F3' if v is not None else '#BBDEFB' for v in kstar_meta6]
+cb1 = ['#FF7043' if v is not None else '#FFCCBC' for v in kstar_b16]
+ax.bar(x - w / 2, meta_plot, w, color=cmeta, edgecolor='white', label='Meta (FOMAML)')
+ax.bar(x + w / 2, b1_plot, w, color=cb1, edgecolor='white', label='B1 (Full Retrain)')
+for i, v in enumerate(kstar_meta6):
+    ax.text(i - w / 2, (v if v is not None else FAILY) + 0.15, 'FAIL' if v is None else str(v),
+            ha='center', va='bottom', fontsize=9, fontweight='bold',
+            color=('red' if v is None else 'black'))
+for i, v in enumerate(kstar_b16):
+    ax.text(i + w / 2, (v if v is not None else FAILY) + 0.15, 'FAIL' if v is None else str(v),
+            ha='center', va='bottom', fontsize=9, color=('red' if v is None else 'black'))
 ax.set_xticks(x)
-ax.set_xticklabels([str(s) for s in scales])
+ax.set_xticklabels([str(s) for s in scales6])
 ax.set_xlabel('Training Images (N)')
 ax.set_ylabel('Recovery Steps k* (lower is better)')
 ax.set_ylim(-0.3, 6.5)
-ax.axhline(y=0, color='green', linestyle='--', alpha=0.5, linewidth=1)
-ax.text(4.4, 0.2, 'Zero-shot', color='green', fontsize=9, ha='right')
-ax.legend(loc='upper right')
+ax.axhline(0, color='green', ls='--', alpha=0.5, lw=1)
+ax.text(5.4, 0.2, 'Zero-shot', color='green', fontsize=9, ha='right')
+ax.legend(loc='upper center')
 ax.set_title('Rotation Recovery: Meta vs. Full Retraining')
-plt.savefig('d:/RCE/fig2_recovery_kstar.png')
-plt.close()
+save(fig, 'fig2_recovery_kstar.png')
+plt.close(fig)
+
 
 # ── Fig 3: Zero-shot TPR@k=0 vs scale ──
-fig, ax = plt.subplots(figsize=(5.5, 3.8))
-ax.plot(scales, tpr_k0_rot, 'o-', color='#2196F3', linewidth=2.5, markersize=9, label='Rotation TPR@k=0')
-ax.axhline(y=0.6, color='red', linestyle='--', alpha=0.7, linewidth=1.5, label='β = 0.6 (target)')
-ax.fill_between(scales, 0.6, 1.0, alpha=0.08, color='green')
-ax.text(200, 0.95, 'Success zone\n(TPR ≥ β)', fontsize=9, color='green', ha='center')
-for i, (s, t) in enumerate(zip(scales, tpr_k0_rot)):
-    ax.annotate(f'{t:.3f}', (s, t), textcoords='offset points', xytext=(0, 12), ha='center', fontsize=10, fontweight='bold')
+fig, ax = plt.subplots(figsize=(6.0, 3.9))
+ax.plot(scales6, tpr_k0_6, 'o-', color='#2196F3', lw=2.5, ms=9, label='Rotation TPR@k=0')
+ax.axhline(0.6, color='red', ls='--', alpha=0.7, lw=1.5, label=r'$\beta$ = 0.6 (target)')
+ax.fill_between(scales6, 0.6, 1.0, alpha=0.08, color='green')
+for s, t in zip(scales6, tpr_k0_6):
+    ax.annotate(f'{t:.3f}', (s, t), textcoords='offset points', xytext=(0, 12),
+                ha='center', fontsize=9, fontweight='bold')
 ax.set_xlabel('Training Images (N)')
 ax.set_ylabel('TPR at k = 0')
 ax.set_xscale('log', base=2)
-ax.set_xticks(scales)
-ax.set_xticklabels([str(s) for s in scales])
+ax.set_xticks(scales6)
+ax.set_xticklabels([str(s) for s in scales6])
 ax.set_ylim(-0.05, 1.05)
-ax.legend(loc='lower right')
+ax.legend(loc='lower left')
 ax.set_title('Zero-Shot Detection Quality vs. Data Scale')
-plt.savefig('d:/RCE/fig3_tpr_vs_scale.png')
-plt.close()
+save(fig, 'fig3_tpr_vs_scale.png')
+plt.close(fig)
 
-# ── Fig 4 / Fig 5: Cost-Benefit (generation time vs k*) ──
-fig, ax1 = plt.subplots(figsize=(5.5, 4.2))
-ax1.bar(range(len(scales)), gen_time, color='#FFA726', alpha=0.8, label='ROBIN Generation (min)')
-ax1.set_xlabel('Training Images (N)')
-ax1.set_ylabel('ROBIN Generation Time (min)', color='#E65100')
-ax1.set_xticks(range(len(scales)))
-ax1.set_xticklabels([str(s) for s in scales])
-ax1.tick_params(axis='y', labelcolor='#E65100')
-# y축 상단 50% 여백 확보 → 범례와 겹침 방지
-ax1.set_ylim(0, 310)
-for i, t in enumerate(gen_time):
-    ax1.text(i, t + 4, f'{t:.0f}m', ha='center', fontsize=9, color='#E65100')
 
-ax2 = ax1.twinx()
-ax2.plot(range(len(scales)), kstar_meta, 's-', color='#1565C0', linewidth=2.5, markersize=9, label='Meta k* (rotation)')
-ax2.set_ylabel('k* (Adaptation Steps)', color='#1565C0')
-ax2.tick_params(axis='y', labelcolor='#1565C0')
-# 우축도 비례 확대 → k*=4 점이 상단에서 내려옴
-ax2.set_ylim(-0.5, 8)
-ax2.set_yticks([0, 1, 2, 3, 4])
-for i, k in enumerate(kstar_meta):
-    offset_y = 8 if k == 0 else 6   # k*=0 라벨은 아래 기준
-    va = 'bottom'
-    ax2.annotate(f'k*={k}', (i, k), textcoords='offset points',
-                 xytext=(10, offset_y), fontsize=9, color='#1565C0',
-                 fontweight='bold', va=va)
-
-# Sweet spot annotation (y좌표를 ylim에 맞게 조정)
-ax1.annotate('★ Sweet Spot', xy=(3, gen_time[3]), xytext=(1.2, 230),
-             fontsize=11, fontweight='bold', color='#2E7D32',
-             arrowprops=dict(arrowstyle='->', color='#2E7D32', lw=1.5))
-
-lines1, labels1 = ax1.get_legend_handles_labels()
-lines2, labels2 = ax2.get_legend_handles_labels()
-# 범례를 plot 상단 여백 영역에 배치
-ax1.legend(lines1 + lines2, labels1 + labels2,
-           loc='upper left', bbox_to_anchor=(0.01, 0.99),
-           framealpha=0.9, edgecolor='#CCCCCC')
-ax1.set_title('Cost–Benefit: Generation Time vs. Recovery Steps')
-plt.tight_layout()
-plt.savefig(WORKSPACE_ROOT / 'fig4_cost_benefit.png',
-            dpi=200, bbox_inches='tight', pad_inches=0.15)
-plt.close()
-
-# ── Fig 5: Spearman correlation scatter (N vs k* and N vs TPR) ──
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 3.8))
-
-# (a) N vs k*
-ax1.scatter(scales, kstar_meta, s=120, c='#1565C0', zorder=5, edgecolors='white', linewidths=1.5)
-z = np.polyfit(np.log2(scales), kstar_meta, 1)
-x_fit = np.linspace(16, 256, 100)
-ax1.plot(x_fit, np.poly1d(z)(np.log2(x_fit)), '--', color='#90CAF9', linewidth=1.5)
-for s, k in zip(scales, kstar_meta):
-    ax1.annotate(f'N={s}', (s, k), textcoords='offset points', xytext=(8, 5), fontsize=9)
-ax1.set_xlabel('Training Images (N)')
-ax1.set_ylabel('k* (Recovery Steps)')
-ax1.set_title('(a) N → k*  (ρ = −0.894, p = 0.041)')
-ax1.set_xscale('log', base=2)
-ax1.set_xticks(scales)
-ax1.set_xticklabels([str(s) for s in scales])
-
-# (b) N vs TPR@k=0
-ax2.scatter(scales, tpr_k0_rot, s=120, c='#2E7D32', zorder=5, edgecolors='white', linewidths=1.5)
-z2 = np.polyfit(np.log2(scales), tpr_k0_rot, 1)
-ax2.plot(x_fit, np.poly1d(z2)(np.log2(x_fit)), '--', color='#A5D6A7', linewidth=1.5)
-ax2.axhline(y=0.6, color='red', linestyle=':', alpha=0.6, linewidth=1)
-for s, t in zip(scales, tpr_k0_rot):
-    ax2.annotate(f'N={s}', (s, t), textcoords='offset points', xytext=(8, 5), fontsize=9)
-ax2.set_xlabel('Training Images (N)')
-ax2.set_ylabel('TPR @ k = 0')
-ax2.set_title('(b) N → TPR@k=0  (ρ = +0.900, p = 0.037)')
-ax2.set_xscale('log', base=2)
-ax2.set_xticks(scales)
-ax2.set_xticklabels([str(s) for s in scales])
-
-plt.tight_layout()
-plt.savefig('d:/RCE/fig5_spearman_scatter.png')
-plt.close()
-
-# ── Fig 6: Adaptation trajectory (rotation TPR vs k) ──
-ks = [0, 1, 2, 4, 8, 16, 32]
-tpr_16  = [0.000, 0.167, 0.333, 0.667, 0.667, 0.833, 0.833]
-tpr_32  = [0.300, 0.700, 0.800, 1.000, 1.000, 1.000, 1.000]
-tpr_64  = [0.688, 0.938, 0.938, 1.000, 1.000, 0.938, 0.938]
-tpr_128 = [0.875, 0.563, 0.563, 0.750, 0.875, 0.938, 0.938]
-tpr_256 = [0.750, 0.438, 0.438, 0.625, 0.813, 0.813, 0.875]
-
-fig, ax = plt.subplots(figsize=(6, 4))
-for data, label, color, marker in [
-    (tpr_16, 'N=16', '#EF5350', 'o'),
-    (tpr_32, 'N=32', '#FFA726', 's'),
-    (tpr_64, 'N=64', '#66BB6A', '^'),
-    (tpr_128, 'N=128', '#42A5F5', 'D'),
-    (tpr_256, 'N=256', '#AB47BC', 'v'),
-]:
-    ax.plot(range(len(ks)), data, f'{marker}-', label=label, color=color, linewidth=2, markersize=8)
-
-ax.axhline(y=0.6, color='gray', linestyle='--', alpha=0.7, linewidth=1.5)
-ax.text(6.5, 0.62, 'β = 0.6', fontsize=9, color='gray')
-ax.fill_between(range(len(ks)), 0.6, 1.05, alpha=0.05, color='green')
-ax.set_xticks(range(len(ks)))
-ax.set_xticklabels([str(k) for k in ks])
-ax.set_xlabel('Adaptation Steps (k)')
-ax.set_ylabel('TPR (Rotation Task)')
+# ── Fig 4: Rotation TPR adaptation trajectory (circled marker = k*) ──
+fig, ax = plt.subplots(figsize=(6.2, 4.2))
+xi = np.arange(len(ks_traj))
+for N in scales6:
+    color, marker = traj_style[N]
+    ax.plot(xi, tpr_traj[N], marker=marker, ls='-', color=color, lw=2, ms=8, label=f'N={N}')
+    kstar = kstar_traj[N]
+    if kstar is not None and kstar in ks_traj:
+        j = ks_traj.index(kstar)
+        ax.scatter([xi[j]], [tpr_traj[N][j]], s=180, facecolors='none',
+                   edgecolors=color, lw=2.2, zorder=5)
+ax.axhline(0.6, color='gray', ls='--', alpha=0.7, lw=1.5)
+ax.text(len(ks_traj) - 1.4, 0.62, r'$\beta = 0.6$', fontsize=10, color='gray')
+ax.fill_between(range(len(ks_traj)), 0.6, 1.05, alpha=0.05, color='green')
+ax.set_xticks(range(len(ks_traj)))
+ax.set_xticklabels([str(k) for k in ks_traj])
+ax.set_xlabel('Test-time adaptation steps $k$')
+ax.set_ylabel('TPR (rotation task)')
 ax.set_ylim(-0.05, 1.08)
 ax.legend(loc='lower right', ncol=2)
-ax.set_title('Rotation TPR Adaptation Trajectory by Scale')
-plt.savefig('d:/RCE/fig6_adaptation_trajectory.png')
-plt.close()
+ax.set_title('Rotation-task detection-recovery trajectory by scale')
+ax.grid(alpha=0.2)
+save(fig, 'fig4_adaptation_trajectory.png')
+plt.close(fig)
 
-print("All 5 focused figures generated successfully:")
-print("  fig2_recovery_kstar.png")
-print("  fig3_tpr_vs_scale.png")
-print("  fig4_cost_benefit.png")
-print("  fig5_spearman_scatter.png")
-print("  fig6_adaptation_trajectory.png")
+
+# ── Fig 5: Cost-benefit (generation time vs k*) ──
+fig, ax1 = plt.subplots(figsize=(6.0, 4.2))
+ax1.bar(range(len(scales6)), gen_time6, color='#FFA726', alpha=0.85, label='ROBIN Generation (min)')
+ax1.set_xlabel('Training Images (N)')
+ax1.set_ylabel('ROBIN Generation Time (min)', color='#E65100')
+ax1.set_xticks(range(len(scales6)))
+ax1.set_xticklabels([str(s) for s in scales6])
+ax1.tick_params(axis='y', labelcolor='#E65100')
+ax1.set_ylim(0, 475)
+for i, t in enumerate(gen_time6):
+    ax1.text(i, t + 6, f'{t:.0f}m', ha='center', fontsize=9, color='#E65100')
+ax2 = ax1.twinx()
+meta_line = [v if v is not None else np.nan for v in kstar_meta6]
+ax2.plot(range(len(scales6)), meta_line, 's-', color='#1565C0', lw=2.5, ms=9, label='Meta k* (rotation)')
+for i, v in enumerate(kstar_meta6):
+    if v is None:
+        ax2.text(i, 0.25, 'FAIL', ha='center', color='red', fontsize=9, fontweight='bold')
+ax2.set_ylabel('k* (Adaptation Steps)', color='#1565C0')
+ax2.tick_params(axis='y', labelcolor='#1565C0')
+ax2.set_ylim(-0.5, 8)
+ax2.set_yticks([0, 1, 2, 3, 4])
+for i, k in enumerate(kstar_meta6):
+    if k is not None:
+        ax2.annotate(f'k*={k}', (i, k), textcoords='offset points', xytext=(10, 6),
+                     fontsize=9, color='#1565C0', fontweight='bold')
+ax1.annotate('* Sweet Spot', xy=(3, gen_time6[3]), xytext=(1.2, 300),
+             fontsize=11, fontweight='bold', color='#2E7D32',
+             arrowprops=dict(arrowstyle='->', color='#2E7D32', lw=1.5))
+l1, la1 = ax1.get_legend_handles_labels()
+l2, la2 = ax2.get_legend_handles_labels()
+ax1.legend(l1 + l2, la1 + la2, loc='upper left', framealpha=0.9, edgecolor='#CCCCCC')
+ax1.set_title('Cost-Benefit: Generation Time vs. Recovery Steps')
+plt.tight_layout()
+save(fig, 'fig5_cost_benefit.png')
+plt.close(fig)
+
+
+# ── Fig 6: Spearman scatter (all six scales; N=512 single-seed shown) ──
+scales5 = [16, 32, 64, 128, 256]
+kstar_meta5 = [2, 1, 0, 0, 0]
+tpr_k0_5 = [0.125, 0.300, 0.688, 0.875, 0.750]
+tpr_k0_512 = 0.188          # real single-seed N=512 TPR@k=0
+kstar_fail_y = 3.0          # capped display height for undefined (FAIL) k* at N=512
+xticks6 = scales5 + [512]
+fig, (axa, axb) = plt.subplots(1, 2, figsize=(9, 3.9))
+axa.scatter(scales5, kstar_meta5, s=120, c='#1565C0', zorder=5, edgecolors='white', linewidths=1.5)
+xf = np.linspace(16, 256, 100)
+za = np.polyfit(np.log2(scales5), kstar_meta5, 1)
+axa.plot(xf, np.poly1d(za)(np.log2(xf)), '--', color='#90CAF9', lw=1.5)
+for s, k in zip(scales5, kstar_meta5):
+    axa.annotate(f'N={s}', (s, k), textcoords='offset points', xytext=(8, 5), fontsize=9)
+axa.scatter([512], [kstar_fail_y], s=180, marker='X', c='#D32F2F', zorder=6, edgecolors='white', linewidths=1.5)
+axa.annotate('N=512: FAIL', (512, kstar_fail_y), textcoords='offset points', xytext=(-8, 6),
+             fontsize=8, color='#D32F2F', fontweight='bold', ha='right')
+axa.set_xlabel('Training Images (N)')
+axa.set_ylabel('k* (Recovery Steps)')
+axa.set_ylim(-0.3, 3.8)
+axa.set_title('(a) N -> k*  (rho = -0.894, n=5)')
+axa.set_xscale('log', base=2)
+axa.set_xticks(xticks6)
+axa.set_xticklabels([str(s) for s in xticks6])
+axb.scatter(scales5, tpr_k0_5, s=120, c='#2E7D32', zorder=5, edgecolors='white', linewidths=1.5)
+zb = np.polyfit(np.log2(scales5), tpr_k0_5, 1)
+axb.plot(xf, np.poly1d(zb)(np.log2(xf)), '--', color='#A5D6A7', lw=1.5)
+axb.axhline(0.6, color='red', ls=':', alpha=0.6, lw=1)
+for s, t in zip(scales5, tpr_k0_5):
+    axb.annotate(f'N={s}', (s, t), textcoords='offset points', xytext=(8, 5), fontsize=9)
+axb.scatter([512], [tpr_k0_512], s=180, marker='X', c='#D32F2F', zorder=6, edgecolors='white', linewidths=1.5)
+axb.annotate('N=512 (outlier)', (512, tpr_k0_512), textcoords='offset points', xytext=(-8, 6),
+             fontsize=8, color='#D32F2F', fontweight='bold', ha='right')
+axb.set_xlabel('Training Images (N)')
+axb.set_ylabel('TPR @ k = 0')
+axb.set_title('(b) N -> TPR@k=0  (rho = +0.900, n=5)')
+axb.set_xscale('log', base=2)
+axb.set_xticks(xticks6)
+axb.set_xticklabels([str(s) for s in xticks6])
+plt.tight_layout()
+save(fig, 'fig6_spearman_scatter.png')
+plt.close(fig)
+
+print('Regenerated fig2-fig6 (six scales, 16-512) into', ASSETS)
